@@ -1,7 +1,7 @@
 torch
 torchvision
 clip
-pytesseract==0.3.8
+pytesseract
 transformers
 matplotlib
 pandas
