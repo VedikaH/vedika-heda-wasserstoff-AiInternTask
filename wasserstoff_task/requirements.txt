@@ -1,0 +1,10 @@
+torch
+torchvision
+clip
+pytesseract
+transformers
+matplotlib
+pandas
+streamlit
+Pillow
+ultralytics
