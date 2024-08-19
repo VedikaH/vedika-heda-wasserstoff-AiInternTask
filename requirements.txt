@@ -1,11 +1,11 @@
 torch
 torchvision
 clip
-pytesseract
+pytesseract==0.3.8
 transformers
 matplotlib
 pandas
-streamlit
+streamlit==0.73.0
 Pillow
 ultralytics
 opencv-python-headless
