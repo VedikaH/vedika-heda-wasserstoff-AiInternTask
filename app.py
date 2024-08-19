@@ -6,6 +6,8 @@ import pandas as pd
 import json
 from PIL import Image
 import logging
+import pytesseract
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from models.segmentation_model import SegmentationModel
@@ -69,6 +71,16 @@ def main():
             print(f"Folder '{folder_path}' does not exist, skipping the clearing step.")
         
     clear_segmented_objects_folder("data/segmented_objects")
+    
+    pytesseract.pytesseract.tesseract_cmd = None
+    def find_tesseract_binary() -> str:
+        return shutil.which("tesseract")
+
+    # Set the tesseract binary path
+    pytesseract.pytesseract.tesseract_cmd = find_tesseract_binary()
+    if not pytesseract.pytesseract.tesseract_cmd:
+        st.error("Tesseract binary not found in PATH. Please install Tesseract.")
+    
     st.title("Image Processing Pipeline 🤖")
 
     # File upload
