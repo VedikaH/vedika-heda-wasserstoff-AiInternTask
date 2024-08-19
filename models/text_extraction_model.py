@@ -1,5 +1,6 @@
 import pytesseract
 from PIL import Image
+import shutil
 
 def find_tesseract_binary() -> str:
     return shutil.which("tesseract")
