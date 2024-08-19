@@ -14,10 +14,26 @@ from models.text_extraction_model import TextExtractionModel
 from models.summarization_model import SummarizationModel
 from utils.postprocessing import save_segmented_objects
 from utils.data_mapping import map_data, save_mapped_data
-from utils.visualization import visualize_detections,visualize_segmentation, create_summary_table
+from utils.visualization import visualize_detections, visualize_segmentation, create_summary_table
 
 # Set up logging
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+
+@st.cache_resource
+def load_segmentation_model():
+    return SegmentationModel()
+
+@st.cache_resource
+def load_identification_model():
+    return IdentificationModel()
+
+@st.cache_resource
+def load_text_extraction_model():
+    return TextExtractionModel()
+
+@st.cache_resource
+def load_summarization_model():
+    return SummarizationModel()
 
 def main():
     st.set_page_config(layout="wide")
@@ -38,19 +54,19 @@ def main():
     """, unsafe_allow_html=True)
 
     def clear_segmented_objects_folder(folder_path):
-            # Remove all files in the segmented_objects folder
-            if os.path.exists(folder_path) and os.path.isdir(folder_path):
-                for filename in os.listdir(folder_path):
-                    file_path = os.path.join(folder_path, filename)
-                    try:
-                        if os.path.isfile(file_path) or os.path.islink(file_path):
-                            os.unlink(file_path)  # Remove the file
-                        elif os.path.isdir(file_path):
-                            shutil.rmtree(file_path)  # Remove the directory
-                    except Exception as e:
-                        st.error(f'Failed to delete {file_path}. Reason: {e}')
-            else:
-                print(f"Folder '{folder_path}' does not exist, skipping the clearing step.")
+        # Remove all files in the segmented_objects folder
+        if os.path.exists(folder_path) and os.path.isdir(folder_path):
+            for filename in os.listdir(folder_path):
+                file_path = os.path.join(folder_path, filename)
+                try:
+                    if os.path.isfile(file_path) or os.path.islink(file_path):
+                        os.unlink(file_path)  # Remove the file
+                    elif os.path.isdir(file_path):
+                        shutil.rmtree(file_path)  # Remove the directory
+                except Exception as e:
+                    st.error(f'Failed to delete {file_path}. Reason: {e}')
+        else:
+            print(f"Folder '{folder_path}' does not exist, skipping the clearing step.")
         
     clear_segmented_objects_folder("data/segmented_objects")
     st.title("Image Processing Pipeline 🤖")
@@ -66,25 +82,23 @@ def main():
             f.write(uploaded_file.getbuffer())
         logging.debug(f"File saved to: {input_path}")
 
-        image=Image.open(input_path)
+        image = Image.open(input_path)
 
         # Segmentation
-        segmentation_model = SegmentationModel()
+        segmentation_model = load_segmentation_model()
         masks, boxes, labels, class_name = segmentation_model.segment_image(input_path)
         logging.debug(f"Segmentation results: {len(masks)} masks, {len(boxes)} boxes, {len(labels)} labels")
         
-
         # Save segmented objects
         objects = save_segmented_objects(image, masks, boxes, "data/segmented_objects")
         logging.debug(f"Saved {len(objects)} segmented objects")
 
         # Object identification
-        identification_model = IdentificationModel()
+        identification_model = load_identification_model()
         detections = []
         for file in sorted(os.listdir("data/segmented_objects")):
-            #obj_path = obj[1]  # Assuming obj[1] contains the path to the segmented object image
-            f=os.path.join("data/segmented_objects",file)
-            obj_detections = identification_model.identify_objects(f,class_name)
+            f = os.path.join("data/segmented_objects", file)
+            obj_detections = identification_model.identify_objects(f, class_name)
             if obj_detections:  # Only append if the object was identified
                 class_name.remove(obj_detections[0]['description'])
                 detections.extend(obj_detections)
@@ -102,28 +116,26 @@ def main():
         output_dir = "data/output"
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
-            
         # Save detections
         with open("data/output/detections.json", "w") as f:
             json.dump(detections, f)
         logging.debug("Detections saved to data/output/detections.json")
 
         # Text extraction
-        text_extraction_model = TextExtractionModel()
+        text_extraction_model = load_text_extraction_model()
         extracted_texts = [text_extraction_model.extract_text(obj[1]) for obj in objects]
         logging.debug(f"Extracted texts: {extracted_texts}")
 
         # Summarization
-        summarization_model = SummarizationModel()
+        summarization_model = load_summarization_model()
         summaries = [summarization_model.summarize(f"{desc} {text}") for desc, text in zip(object_descriptions, extracted_texts)]
         logging.debug(f"Summaries: {summaries}")
 
         # Data mapping
-        mapped_data = map_data(objects, detections,object_descriptions, extracted_texts, summaries)
+        mapped_data = map_data(objects, detections, object_descriptions, extracted_texts, summaries)
         save_mapped_data(mapped_data, "data/output/mapped_data.json")
-        # logging.debug("Mapped data saved to data/output/mapped_data.json")
 
-        # # Visualization
+        # Visualization
         visualize_segmentation(image, masks, "data/output/segmented_image.png")
         visualize_detections(input_path, "data/output/detected_objects.png")
         create_summary_table(mapped_data, "data/output/summary_table.csv")
@@ -158,8 +170,7 @@ def main():
             if st.button("Show Summary Table"):
                 st.session_state.show_summary_table = not st.session_state.show_summary_table
 
-
-        # Display components based on session state in the right column
+        # Display components based on session state
         def resize_image(image_path, target_width, target_height):
             image = Image.open(image_path)
             resized_image = image.resize((target_width, target_height))
@@ -168,8 +179,7 @@ def main():
         # Set desired width and height
         IMAGE_WIDTH = 600
         IMAGE_HEIGHT = 400
-        # with right_column:
-        # Use columns to center the images and table
+        
         if st.session_state.show_original_image:
             col1, col2, col3 = st.columns([0.3, 0.4, 0.3])
             with col2:
@@ -189,7 +199,7 @@ def main():
                 st.image(resized_image, caption="Detected Objects", use_column_width=True)
 
         if st.session_state.show_summary_table:
-            col1, col2, col3 = st.columns([1,3,1])
+            col1, col2, col3 = st.columns([1, 3, 1])
             with col2:
                 summary_table = pd.read_csv("data/output/summary_table.csv")
                 st.table(summary_table)
