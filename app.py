@@ -39,15 +39,18 @@ def main():
 
     def clear_segmented_objects_folder(folder_path):
             # Remove all files in the segmented_objects folder
-            for filename in os.listdir(folder_path):
-                file_path = os.path.join(folder_path, filename)
-                try:
-                    if os.path.isfile(file_path) or os.path.islink(file_path):
-                        os.unlink(file_path)  # Remove the file
-                    elif os.path.isdir(file_path):
-                        shutil.rmtree(file_path)  # Remove the directory
-                except Exception as e:
-                    st.error(f'Failed to delete {file_path}. Reason: {e}')
+            if os.path.exists(folder_path) and os.path.isdir(folder_path):
+                for filename in os.listdir(folder_path):
+                    file_path = os.path.join(folder_path, filename)
+                    try:
+                        if os.path.isfile(file_path) or os.path.islink(file_path):
+                            os.unlink(file_path)  # Remove the file
+                        elif os.path.isdir(file_path):
+                            shutil.rmtree(file_path)  # Remove the directory
+                    except Exception as e:
+                        st.error(f'Failed to delete {file_path}. Reason: {e}')
+            else:
+                print(f"Folder '{folder_path}' does not exist, skipping the clearing step.")
         
     clear_segmented_objects_folder("data/segmented_objects")
     st.title("Image Processing Pipeline 🤖")
@@ -96,6 +99,10 @@ def main():
                 object_descriptions.append("Unidentified object")
         logging.debug(f"Object description: {detections}")
 
+        output_dir = "data/output"
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+            
         # Save detections
         with open("data/output/detections.json", "w") as f:
             json.dump(detections, f)
