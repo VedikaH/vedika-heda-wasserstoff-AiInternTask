@@ -21,10 +21,6 @@ from utils.visualization import visualize_detections, visualize_segmentation, cr
 # Set up logging
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
-os.system("sudo apt-get update -y")
-os.system("sudo apt-get install tesseract-ocr -y")
-os.system("pip install -q pytesseract")
-
 @st.cache_resource
 def load_segmentation_model():
     return SegmentationModel()
@@ -75,15 +71,6 @@ def main():
             print(f"Folder '{folder_path}' does not exist, skipping the clearing step.")
         
     clear_segmented_objects_folder("data/segmented_objects")
-    
-    # pytesseract.pytesseract.tesseract_cmd = None
-    # def find_tesseract_binary() -> str:
-    #     return shutil.which("tesseract")
-
-    # # Set the tesseract binary path
-    # pytesseract.pytesseract.tesseract_cmd = find_tesseract_binary()
-    # if not pytesseract.pytesseract.tesseract_cmd:
-    #     st.error("Tesseract binary not found in PATH. Please install Tesseract.")
     
     st.title("Image Processing Pipeline 🤖")
 
