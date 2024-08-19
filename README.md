@@ -77,7 +77,7 @@ pip install -r requirements.txt
 ## Usage
 
 ### Accessing the Deployed App
-You can access the Image Processing Pipeline directly via the deployed Streamlit application 
+You can access the Image Processing Pipeline directly via the deployed Streamlit application https://image-processing-pipeline.streamlit.app/
 
 ### Running Locally (Optional)
 
