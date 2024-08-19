@@ -1,15 +1,9 @@
-import pytesseract
-from PIL import Image
-import shutil
+import easyocr
 
 class TextExtractionModel:
     def __init__(self):
-        # No initialization needed for pytesseract
-        pass
+        self.reader = easyocr.Reader(['en'])
 
     def extract_text(self, image_path):
-        # Open the image file
-        img = Image.open(image_path)
-        # Use pytesseract to extract text
-        result = pytesseract.image_to_string(img)
-        return result
+        result = self.reader.readtext(image_path)
+        return ' '.join([detection[1] for detection in result])
