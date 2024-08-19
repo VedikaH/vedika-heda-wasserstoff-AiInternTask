@@ -1,6 +1,12 @@
 import pytesseract
 from PIL import Image
 
+def find_tesseract_binary() -> str:
+    return shutil.which("tesseract")
+
+# Set the tesseract binary path
+pytesseract.pytesseract.tesseract_cmd = find_tesseract_binary()
+
 class TextExtractionModel:
     def __init__(self):
         # No initialization needed for pytesseract
